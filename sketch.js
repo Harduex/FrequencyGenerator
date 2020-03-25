@@ -5,24 +5,26 @@ var button;
 var playing;
 var time;
 var count = "";
+var counter;
 var freqList = "";
 var sel;
 var fft;
 var amp;
+var nowPlaying = "";
 
 function setup() {
 	createCanvas(300, 300);
 	volumeLevel = createSlider(0.05, 2, 0, 0.01);
-	volumeLevel.position(80, 40);
+	volumeLevel.position(80, 30);
 
 	freq = createInput();
-	freq.position(60, 90);
+	freq.position(60, 110);
 
 	time = createInput();
-	time.position(60, 140);
+	time.position(60, 170);
 
 	sel = createSelect();
-	sel.position(110, 190);
+	sel.position(110, 220);
 	sel.option('square');
 	sel.option('sine');
 	sel.option('triangle');
@@ -30,7 +32,7 @@ function setup() {
 	sel.changed(setWave);
 
 	button = createButton('play / stop');
-	button.position(110, 240);
+	button.position(110, 260);
 	button.mousePressed(toggle);
 
 	wave = new p5.Oscillator();
@@ -46,23 +48,27 @@ function draw() {
 
 	fill(255);
 	noStroke();
-	text('Volume', volumeLevel.x + volumeLevel.width / 2 - 10, 40);
-	text('Freqency (Hz)', freq.x + freq.width / 2 - 30, 85);
-	text('Wave', sel.x + sel.width, 185);
-	text('Time ' + count + ' (seconds)', time.x + time.width / 2 - 40, 135);
+	text('Volume', volumeLevel.x + volumeLevel.width / 2 - 10, 30);
+	text('Freqencies (Hz)', freq.x + freq.width / 2 - 38, 85);
+
+	if (freqList.length === 1 || time.value() === "") {
+		text('Current: ' + freqList[0], freq.x + freq.width / 2 - 40, 105);
+	} else {
+		text('Current: ' + nowPlaying, freq.x + freq.width / 2 - 40, 105);
+	}
+	text('Wave', sel.x + sel.width, 215);
+	text('Time ' + count + ' (seconds)', time.x + time.width / 2 - 40, 160);
 
 	noFill();
 	stroke(255);
 	let spectrum = fft.analyze();
-	
+
 	beginShape();
 	for (x = 0; x < spectrum.length; x++) {
 		let y = map(spectrum[x], 0, 500, height, 0);
 		vertex(x, y);
 	}
 	endShape();
-
-	//ellipse(height/2, height, width, vol*200);
 
 	wave.amp(volumeLevel.value());
 }
@@ -77,12 +83,19 @@ function toggle() {
 		freqList = freq.value().split(",");
 		currentFreq = 0;
 
+		if(freqList.length > 1 && time.value() === "") {
+			time.value(60)
+		}
+
 		wave.freq(float(freqList[currentFreq]));
+		nowPlaying = float(freqList[currentFreq]);
+
 		playing = true;
 
 		freqChange = setInterval(() => {
 			currentFreq++;
 			wave.freq(float(freqList[currentFreq]));
+			nowPlaying = float(freqList[currentFreq]);
 			if (currentFreq === time.value()) {
 				clearInterval(freqChange);
 				currentFreq = 0;
@@ -90,7 +103,7 @@ function toggle() {
 		}, time.value() * 1000);
 
 		if (float(time.value()) > 0) {
-			var counter = 0;
+			counter = 0;
 			count = time.value() * freqList.length;
 			timer = setInterval(() => {
 				count = float(time.value() * freqList.length - counter - 1);
@@ -101,6 +114,7 @@ function toggle() {
 					clearInterval(timer);
 					clearInterval(freqChange);
 					currentFreq = 0;
+					nowPlaying = "";
 				}
 			}, 1000);
 		}
