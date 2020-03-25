@@ -7,6 +7,8 @@ var time;
 var count = "";
 var freqList = "";
 var sel;
+var fft;
+var amp;
 
 function setup() {
 	createCanvas(300, 300);
@@ -32,52 +34,73 @@ function setup() {
 	button.mousePressed(toggle);
 
 	wave = new p5.Oscillator();
-	//wave.setType('square');
+	wave.setType('square');
+
+	fft = new p5.FFT();
+	fft.setInput(wave);
 
 }
 
 function draw() {
 	background(50);
 
+	fill(255);
+	noStroke();
 	text('Volume', volumeLevel.x + volumeLevel.width / 2 - 10, 40);
 	text('Freqency (Hz)', freq.x + freq.width / 2 - 30, 85);
 	text('Wave', sel.x + sel.width, 185);
 	text('Time ' + count + ' (seconds)', time.x + time.width / 2 - 40, 135);
-	fill(255);
+
+	noFill();
+	stroke(255);
+	let spectrum = fft.analyze();
+	
+	beginShape();
+	for (x = 0; x < spectrum.length; x++) {
+		let y = map(spectrum[x], 0, 500, height, 0);
+		vertex(x, y);
+	}
+	endShape();
+
+	//ellipse(height/2, height, width, vol*200);
 
 	wave.amp(volumeLevel.value());
 }
 
 var timer;
-var currentFreq = 0;
+var freqChange;
+var currentFreq;
 
 function toggle() {
 	if (!playing) {
 		wave.start();
-		freqList = freq.value().trim().split(",");
+		freqList = freq.value().split(",");
+		currentFreq = 0;
+
 		wave.freq(float(freqList[currentFreq]));
 		playing = true;
 
-		freqChange = setInterval(()=>{
+		freqChange = setInterval(() => {
 			currentFreq++;
 			wave.freq(float(freqList[currentFreq]));
-			if(currentFreq === time.value()) {
+			if (currentFreq === time.value()) {
 				clearInterval(freqChange);
 				currentFreq = 0;
 			}
-		}, time.value()*1000);
+		}, time.value() * 1000);
 
 		if (float(time.value()) > 0) {
 			var counter = 0;
-			count = time.value()*freqList.length;
+			count = time.value() * freqList.length;
 			timer = setInterval(() => {
-				count = float(time.value()*freqList.length - counter - 1);
+				count = float(time.value() * freqList.length - counter - 1);
 				counter++;
-				if (counter === float(time.value())*freqList.length) {
+				if (counter === float(time.value()) * freqList.length) {
 					wave.stop();
 					playing = false;
 					clearInterval(timer);
-					//location.reload();
+					clearInterval(freqChange);
+					currentFreq = 0;
 				}
 			}, 1000);
 		}
@@ -86,7 +109,9 @@ function toggle() {
 		wave.stop();
 		playing = false;
 		clearInterval(timer);
+		clearInterval(freqChange);
 		count = "";
+		currentFreq = 0;
 	}
 }
 
