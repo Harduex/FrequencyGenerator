@@ -13,7 +13,7 @@ var amp;
 var nowPlaying = "";
 
 function setup() {
-	createCanvas(300, 300);
+	createCanvas(300, 380);
 	volumeLevel = createSlider(0.05, 2, 0, 0.01);
 	volumeLevel.position(80, 30);
 
@@ -38,7 +38,7 @@ function setup() {
 	wave = new p5.Oscillator();
 	wave.setType('square');
 
-	fft = new p5.FFT();
+	fft = new p5.FFT(0.8,128);
 	fft.setInput(wave);
 
 }
@@ -63,10 +63,12 @@ function draw() {
 	stroke(255);
 	let spectrum = fft.analyze();
 
+	rect(85, height - 80, 128, 70);
+
 	beginShape();
 	for (x = 0; x < spectrum.length; x++) {
-		let y = map(spectrum[x], 0, 500, height, 0);
-		vertex(x, y);
+		let y = map(spectrum[x], 0, 255, height-10, 300);
+		vertex(x+85, y);
 	}
 	endShape();
 
