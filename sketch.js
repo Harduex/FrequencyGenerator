@@ -54,11 +54,10 @@ function draw() {
 	if (freqList.length === 1 || time.value() === "") {
 		text('Current: ' + freqList[0], freq.x + freq.width / 2 - 40, 105);
 	} else {
-		text('Current: ' + nowPlaying, freq.x + freq.width / 2 - 40, 105);
+		text('Current: ' + nowPlaying + ' Hz / time: ' + timeLeft + ' s', freq.x + freq.width / 2 - 60, 105);
 	}
 	text('Wave', sel.x + sel.width, 215);
 	text('Time ' + count + ' (seconds)', time.x + time.width / 2 - 40, 160);
-
 	noFill();
 	stroke(255);
 	let spectrum = fft.analyze();
@@ -78,6 +77,7 @@ function draw() {
 var timer;
 var freqChange;
 var currentFreq;
+var timeLeft;
 
 function toggle() {
 	if (!playing) {
@@ -106,16 +106,22 @@ function toggle() {
 
 		if (float(time.value()) > 0) {
 			counter = 0;
+			timeLeft = time.value();
 			count = time.value() * freqList.length;
 			timer = setInterval(() => {
 				count = float(time.value() * freqList.length - counter - 1);
 				counter++;
+				timeLeft--;
+				if (timeLeft === 0) {
+					timeLeft = time.value();
+				}
 				if (counter === float(time.value()) * freqList.length) {
 					wave.stop();
 					playing = false;
 					clearInterval(timer);
 					clearInterval(freqChange);
 					currentFreq = 0;
+					timeLeft = 0;
 					nowPlaying = "";
 				}
 			}, 1000);
@@ -127,6 +133,7 @@ function toggle() {
 		clearInterval(timer);
 		clearInterval(freqChange);
 		count = "";
+		timeLeft = 0;
 		currentFreq = 0;
 	}
 }
